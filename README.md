@@ -1,6 +1,10 @@
 # plxr
 
+(Pre-release)
+
+## Summary
+
 Read, write and introspect higher-level objects embedded in self-describing Adios files or streams.
 
-Currently supports:
+## Currently supports
    * Images
