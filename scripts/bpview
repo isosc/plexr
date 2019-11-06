@@ -1,0 +1,207 @@
+#!/usr/bin/env python3
+
+import tkinter as tk
+from tkinter import ttk
+from PIL import Image, ImageTk
+import sys
+from mpi4py import MPI
+import adios2 as ad
+from plxr import *
+import pandastable as pt
+
+
+class ADVarWidget(tk.LabelFrame):
+    def __init__(self, master, filename, comm):
+        super().__init__(master)
+        self.filename = filename
+        self.comm = comm
+        self.master = master
+        self.create_widgets()
+
+    def create_widgets(self):
+        self.mdframe = tk.Frame(self)
+        self.mdframe.grid(row=0, column=0)
+
+        self.name_label = tk.Label(self.mdframe)
+        self.name_label.grid(row=0, column=1, sticky=tk.W)
+        self.type_label = tk.Label(self.mdframe)
+        self.type_label.grid(row=1, column=1, sticky=tk.W)
+        self.shape_label = tk.Label(self.mdframe)
+        self.shape_label.grid(row=2, column=1, sticky=tk.W)
+      
+        self.name_label_label = tk.Label(self.mdframe)
+        self.name_label_label.grid(row=0, column=0, sticky=tk.E)
+        self.type_label_label = tk.Label(self.mdframe)
+        self.type_label_label.grid(row=1, column=0, sticky=tk.E)
+        self.shape_label_label = tk.Label(self.mdframe)
+        self.shape_label_label.grid(row=2, column=0, sticky=tk.E)
+     
+        self.name_label_label.configure (text="Name:")
+        self.type_label_label.configure (text="Type:")
+        self.shape_label_label.configure (text="Shape:")
+
+        #Use these later to show 1d or 2d data, or labeled data frames
+        #self.ptable = pt.Table(self)
+        #self.ptable.grid(row=0, column=1, sticky=tk.E+tk.W+tk.N+tk.S)
+        #print (dir (self.ptable))
+
+    def set_var(self, var_name, step=0):
+        self.configure (text="Adios Variable: " + var_name)
+        with ad.open(self.filename, 'r', self.comm) as f:
+            print (dir (f) )
+            vars = f.available_variables()
+            print (vars[var_name])
+            self.name_label.configure(text=var_name)
+            self.type_label.configure(text=vars[var_name]['Type'])
+            shape = vars[var_name]['Shape']
+            if shape == '':
+                shape = "Scalar"
+            self.shape_label.configure(text=shape)
+             
+
+
+class ADScrollerWidget(tk.Frame):
+    def __init__(self, master, filename, comm, width=600, height=400):
+        super().__init__(master)
+        self.filename = filename
+        self.width = width
+        self.height = height
+        self.comm = comm
+        self.cur_step_string_var=tk.StringVar()
+        self.cur_step_string_var.set("-1")
+        self.master = master
+        self.create_widgets()
+        self.canvas_image = None
+
+    def handle_left_button_click(self):
+        print ("left")
+        if self.cur_step == 0:
+            return
+        else:
+            self.set_var(self.cur_name, self.cur_step-1)
+
+    def handle_right_button_click(self):
+        print ("right")
+        if self.cur_step >= self.max_step:
+            return
+        else:
+            self.set_var(self.cur_name, self.cur_step+1)
+
+    def set_var(self, image_name, step=0):
+        with ad.open(self.filename, 'r', self.comm) as f:
+            self.cur_img = ImageTk.PhotoImage(image=read_image(f,image_name,step))
+            self.cur_step = step
+            self.cur_step_string_var.set("%i"%step)
+            self.cur_name = image_name
+            self.max_step = get_available_image_steps(f,image_name) - 1 #zero indexed
+
+            if self.canvas_image == None:
+                self.canvas_image = self.canvas.create_image(10, 10, anchor=tk.NW, image=self.cur_img)
+            else:
+                self.canvas.itemconfig(self.canvas_image, image=self.cur_img)
+            self.master.master.update_idletasks()
+
+    def create_widgets(self):
+        self.canvas = tk.Canvas(self, width=self.width,height=self.height)
+        self.canvas.grid(row=0, column=0, sticky=tk.E+tk.W+tk.N+tk.S)
+
+        self.control_frame = tk.Frame(self)
+        self.control_frame.grid(row=1, column=0)
+
+        self.left_button = tk.Button(self.control_frame, text='<', command=self.handle_left_button_click)
+        self.left_button.grid(row=0, column=0, sticky=tk.E)
+
+        self.step_label = tk.Label(self.control_frame, textvariable=self.cur_step_string_var, justify=tk.CENTER)
+        self.step_label.grid(row=0, column=1)
+
+        self.right_button = tk.Button(self.control_frame, text='>', command=self.handle_right_button_click)
+        self.right_button.grid(row=0, column=2, sticky=tk.W)
+
+        self.rowconfigure(0, weight=5)
+        self.rowconfigure(1, weight=0)
+
+        self.columnconfigure(0, weight=5)
+        self.columnconfigure(1, weight=0)
+        self.columnconfigure(2, weight=0)
+
+class Application(tk.Frame):
+    def __init__(self, master=None):
+        super().__init__(master)
+        self.master = master
+        self.grid(row=0, column=0, sticky=tk.E+tk.W+tk.N+tk.S)
+        self.create_widgets()
+
+        self.master.columnconfigure(0, weight=1)
+        self.master.rowconfigure(0, weight=1)
+
+    def tree_item_clicked(self, event):
+        #TODO: check if it's an image...
+        if 'image' in self.bptree.item(self.bptree.focus())['tags']:
+            image_name = self.bptree.item(self.bptree.focus())['text']
+            self.adscroller.set_var(image_name)
+            self.adscroller.tkraise()
+        elif 'var' in self.bptree.item(self.bptree.focus())['tags']:
+            var_name = self.bptree.item(self.bptree.focus())['text']
+            self.advar.set_var(var_name)
+            self.advar.tkraise()
+        self.master.update()
+
+    def create_widgets(self):
+        self.winfo_toplevel().title("bpview: %s"%sys.argv[1])
+
+        self.comm = MPI.COMM_SELF
+        
+        self.bptree = ttk.Treeview(self)
+        self.bptree.grid(row=0, column=0, sticky=tk.E+tk.W+tk.N+tk.S)
+        self.bptree['columns'] = ('Type')
+        self.bptree.bind("<ButtonRelease-1>", self.tree_item_clicked)
+
+        self.adscroller = ADScrollerWidget(self, sys.argv[1], self.comm)
+        self.adscroller.grid(row=0, column=1, sticky=tk.E+tk.W+tk.N+tk.S)
+
+        self.advar = ADVarWidget(self, sys.argv[1], self.comm)
+        self.advar.grid(row=0, column=1, sticky=tk.E+tk.W+tk.N+tk.S)
+
+        #Open the ADIOS file
+        with ad.open(sys.argv[1], 'r', self.comm) as f:
+            #print (get_image_names(f))
+            #print (get_raw_var_names(f))
+
+            #Add variables to the tree...
+            print (get_image_names(f))
+            for img in get_image_names(f):
+                print ("Inserting image: " + img)
+                self.bptree.insert('', 'end', img, text=img, values=['Image'], tags=('image'))
+            self.bptree.tag_configure('image', foreground='green')
+            for var in get_raw_var_names(f):
+                self.bptree.insert('', 'end', var, text=var, values=[f.available_variables()[var]['Type']], tags=('var'))
+
+        self.quit = tk.Button(self, text="Exit", fg="red",
+                              command=self.master.destroy)
+        self.quit.grid(row=1, column=0)
+
+        self.rowconfigure(0, weight=5)
+        self.rowconfigure(1, weight=0)
+        self.columnconfigure(0, weight=0)
+        self.columnconfigure(1, weight=20)
+
+def usage():
+    print("Add usage text...")
+
+
+def main():
+
+    #Check for single argument
+    if len(sys.argv) < 2:
+        usage()
+        exit(1)
+
+    #print (sys.argv[1])
+    root = tk.Tk()
+    app = Application(master=root)
+    app.mainloop()
+
+
+
+if __name__ == "__main__":
+    main()

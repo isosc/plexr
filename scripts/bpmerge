@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+
+import sys
+from mpi4py import MPI
+import adios2 as ad
+from ast import literal_eval as make_tuple
+
+def usage():
+    print("Usage: bpmerge <f1> <f2> <fout>")
+
+
+def main():
+
+    #Check for single argument
+    if len(sys.argv) < 4:
+        usage()
+        exit(1)
+
+    comm = MPI.COMM_SELF
+    max_steps = 0
+    zeros = [0,0,0,0,0,0,0,0,0,0]
+
+    with ad.open(sys.argv[1], 'r', comm) as f1:
+        with ad.open(sys.argv[2], 'r', comm) as f2:
+            with ad.open(sys.argv[3], 'w', comm) as fout:
+
+                # Decide how many timesteps to copy 
+                vars1 = f1.available_variables()
+                print (vars1)
+
+                # Grab all of the step info
+                varsteps1 = []
+                for f1step in f1:
+                    varsteps1.append(f1step.available_variables() )
+                varsteps2 = []
+                for f2step in f2:
+                    varsteps2.append(f2step.available_variables() )
+                #print (varsteps2)
+
+                for var in vars1.keys():
+                    steps = int(vars1[var]['AvailableStepsCount'])
+                    if steps > max_steps:
+                        max_steps = steps
+                vars2 = f2.available_variables()
+                for var in vars2.keys():
+                    steps = int(vars2[var]['AvailableStepsCount'])
+                    if steps > max_steps:
+                        max_steps = steps
+
+                for i in range(max_steps):
+                    for var in vars1.keys():
+                        data = None
+                        var_shape_string = varsteps1[i][var]['Shape']
+                        if var_shape_string == '':
+                            if varsteps1[i][var]['Type'] == 'string':
+                                data = f1.read_string(var)[0]
+                            else:
+                                data = f1.read(var)
+                            fout.write(var,data)
+                        else:
+                            var_shape = make_tuple(varsteps1[i][var]['Shape'])
+                            if not type(var_shape) is tuple: #Doesn't create tuple if len=1, wrap with a list
+                                var_shape = [var_shape]
+                            data = f1.read(var, start=zeros[:len(var_shape)], count=var_shape, step_start=i, step_count=1)
+                            fout.write(var, data, shape=var_shape, start=zeros[:len(var_shape)], count=var_shape, end_step=False)
+
+                    for var in vars2.keys():
+                        data = None
+                        var_shape_string = varsteps2[i][var]['Shape']
+                        if var_shape_string == '':
+                            if varsteps2[i][var]['Type'] =='string':
+                                data = f2.read_string(var)[0]
+                            else:
+                                data = f2.read(var)
+                                #print (data)
+                            fout.write(var,data)
+                        else:
+                            var_shape = make_tuple(varsteps2[i][var]['Shape']) 
+                            if not type(var_shape) is tuple: #Doesn't create tuple if len=1, wrap with a list
+                                var_shape = [var_shape]
+                            data = f2.read(var, start=zeros[:len(var_shape)], count=var_shape, step_start=i, step_count=1)
+                            fout.write(var, data, shape=var_shape, start=zeros[:len(var_shape)], count=var_shape, end_step=False)
+
+                    fout.end_step()
+
+
+if __name__ == "__main__":
+    main()
