@@ -53,7 +53,7 @@ def read_image (ad_file, var_name,step=0):
 
     #Check image type
     ad_vars = ad_file.available_variables()
-    schema_type = ad_vars[var_name + '/__plxr_schema_type']['Value']
+    schema_type = ad_file.read_string(var_name + '/__plxr_schema_type')[0]
 
     if "__plxr:image-rgb-8" in schema_type: 
         # Should allow steps to contain images of different sizes (as for image-png)
@@ -86,7 +86,9 @@ def get_image_names (ad_file):
     rv = []
     ad_vars = ad_file.available_variables()
     for ad_var in ad_vars.keys():
-        if ad_var.split('/')[-1].startswith('__plxr_schema_type') and 'image' in ad_vars[ad_var]['Value']:
+        # "Value" no longer provided for strings, use read_string instead...
+        #if ad_var.split('/')[-1].startswith('__plxr_schema_type') and 'image' in ad_vars[ad_var]['Value']:
+        if ad_var.split('/')[-1].startswith('__plxr_schema_type') and 'image' in ad_file.read_string(ad_var)[0]:
             rv.append(ad_var[0:ad_var.rfind('/')])
     return rv
 

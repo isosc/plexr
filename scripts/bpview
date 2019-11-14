@@ -7,7 +7,13 @@ import sys
 from mpi4py import MPI
 import adios2 as ad
 from plxr import *
-import pandastable as pt
+
+#import matplotlib
+#matplotlib.use("TkAgg")
+#from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+#from matplotlib.figure import Figure
+
+#import pandastable as pt
 
 
 class ADVarWidget(tk.LabelFrame):
@@ -45,12 +51,18 @@ class ADVarWidget(tk.LabelFrame):
         #self.ptable.grid(row=0, column=1, sticky=tk.E+tk.W+tk.N+tk.S)
         #print (dir (self.ptable))
 
+#        self.plotfig = Figure (figsize=(5,5), dpi=100)
+
+#        self.plotcanvas = FigureCanvasTkAgg(self.plotfig, self)
+#        self.plotcanvas.grid(row=1, column=0)
+
+
     def set_var(self, var_name, step=0):
         self.configure (text="Adios Variable: " + var_name)
         with ad.open(self.filename, 'r', self.comm) as f:
-            print (dir (f) )
+            #print (dir (f) )
             vars = f.available_variables()
-            print (vars[var_name])
+            #print (vars[var_name])
             self.name_label.configure(text=var_name)
             self.type_label.configure(text=vars[var_name]['Type'])
             shape = vars[var_name]['Shape']
@@ -72,24 +84,43 @@ class ADScrollerWidget(tk.Frame):
         self.master = master
         self.create_widgets()
         self.canvas_image = None
+        self.cur_pil_img = None
+        self.canvas.bind("<Configure>", self.resize)
 
     def handle_left_button_click(self):
-        print ("left")
+        #print ("left")
         if self.cur_step == 0:
             return
         else:
             self.set_var(self.cur_name, self.cur_step-1)
 
     def handle_right_button_click(self):
-        print ("right")
+        #print ("right")
         if self.cur_step >= self.max_step:
             return
         else:
             self.set_var(self.cur_name, self.cur_step+1)
+    
+    # for all of your resizing needs. Called by resize handler, as well as for initial creation of image
+    # Deals with preservation of image aspect ratio by fitting proper proportions into the available area
+    def do_resize(self, img, reqwidth, reqheight):
+        ratio = max(img.width/reqwidth, img.height/reqheight)
+        width = int(img.width / ratio)
+        height = int(img.height / ratio)
+        return img.resize((width, height), Image.BICUBIC)
+
+    # Event handler for frame resize
+    def resize(self, event):
+        if self.cur_pil_img != None:
+            self.cur_img = ImageTk.PhotoImage(self.do_resize(self.cur_pil_img, event.width, event.height))
+            self.canvas.itemconfig(self.canvas_image, image=self.cur_img)
+            self.width = event.width
+            self.height = event.height
 
     def set_var(self, image_name, step=0):
         with ad.open(self.filename, 'r', self.comm) as f:
-            self.cur_img = ImageTk.PhotoImage(image=read_image(f,image_name,step))
+            self.cur_pil_img = read_image(f,image_name,step)
+            self.cur_img = ImageTk.PhotoImage(image=self.do_resize(self.cur_pil_img, self.width, self.height) )
             self.cur_step = step
             self.cur_step_string_var.set("%i"%step)
             self.cur_name = image_name
@@ -168,9 +199,9 @@ class Application(tk.Frame):
             #print (get_raw_var_names(f))
 
             #Add variables to the tree...
-            print (get_image_names(f))
+            #print (get_image_names(f))
             for img in get_image_names(f):
-                print ("Inserting image: " + img)
+                #print ("Inserting image: " + img)
                 self.bptree.insert('', 'end', img, text=img, values=['Image'], tags=('image'))
             self.bptree.tag_configure('image', foreground='green')
             for var in get_raw_var_names(f):
@@ -186,7 +217,10 @@ class Application(tk.Frame):
         self.columnconfigure(1, weight=20)
 
 def usage():
-    print("Add usage text...")
+    print("""
+Usage:
+  bpview <bpfile>    
+""")
 
 
 def main():
