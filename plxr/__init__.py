@@ -49,7 +49,7 @@ def get_available_image_steps (ad_file, var_name):
     ad_vars = ad_file.available_variables()
     return int(ad_vars['%s/__plxr_data'%var_name]['AvailableStepsCount'])
 
-def read_image (ad_file, var_name,step=0):
+def read_image (ad_file, var_name, step=0):
 
     #Check image type
     ad_vars = ad_file.available_variables()

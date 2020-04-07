@@ -8,10 +8,10 @@ from mpi4py import MPI
 import adios2 as ad
 from plxr import *
 
-#import matplotlib
-#matplotlib.use("TkAgg")
-#from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-#from matplotlib.figure import Figure
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg 
+from matplotlib.figure import Figure
 
 #import pandastable as pt
 
@@ -51,10 +51,14 @@ class ADVarWidget(tk.LabelFrame):
         #self.ptable.grid(row=0, column=1, sticky=tk.E+tk.W+tk.N+tk.S)
         #print (dir (self.ptable))
 
-#        self.plotfig = Figure (figsize=(5,5), dpi=100)
+        self.plotfig = Figure (figsize=(30,20), dpi=100)
+        self.subplot = self.plotfig.add_subplot (111)
 
-#        self.plotcanvas = FigureCanvasTkAgg(self.plotfig, self)
-#        self.plotcanvas.grid(row=1, column=0)
+        self.plotcanvas = FigureCanvasTkAgg(self.plotfig, self)
+        self.plotcanvas.get_tk_widget().grid(row=1, column=0, sticky=tk.E+tk.W+tk.N+tk.S)
+
+        #self.plotcanvas.get_tk_widget().bind("<Configure>", self.resize)
+        self.bind("<Configure>", self.resize)
 
 
     def set_var(self, var_name, step=0):
@@ -69,7 +73,35 @@ class ADVarWidget(tk.LabelFrame):
             if shape == '':
                 shape = "Scalar"
             self.shape_label.configure(text=shape)
-             
+            
+            if len(vars[var_name]["Shape"].split(',')) == 1:
+                #Plot 1D data
+                print ("Updating plot")
+                self.subplot.clear()
+                self.subplot.plot(f.read(var_name))
+                self.plotcanvas.draw()
+            elif len(vars[var_name]["Shape"].split(',')) == 2:
+                #Plot 2D data
+                print ("Updating 2d plot")
+                self.subplot.clear()
+                self.subplot.plot(f.read(var_name))
+                self.plotcanvas.draw()
+
+    def resize(self, event):
+
+        print (event)
+
+        #print (dir (self.plotcanvas.get_tk_widget()))
+        #props = self.plotcanvas.get_tk_widget().config()
+        #print (props)
+        #print ("{},{}".format(props['width'], props['height']))
+
+        self.plotcanvas.resize(event)
+
+        # Can't do this - results in infinite recursion
+        #self.plotcanvas.get_tk_widget().config(width=event.width)
+
+
 
 
 class ADScrollerWidget(tk.Frame):
@@ -86,6 +118,9 @@ class ADScrollerWidget(tk.Frame):
         self.canvas_image = None
         self.cur_pil_img = None
         self.canvas.bind("<Configure>", self.resize)
+
+        # Attempting to fix initial image scaling issue
+        #self.grid_propagate(0)
 
     def handle_left_button_click(self):
         #print ("left")
@@ -120,6 +155,7 @@ class ADScrollerWidget(tk.Frame):
     def set_var(self, image_name, step=0):
         with ad.open(self.filename, 'r', self.comm) as f:
             self.cur_pil_img = read_image(f,image_name,step)
+            print ("doing it {}, {}".format(self.width, self.height) )
             self.cur_img = ImageTk.PhotoImage(image=self.do_resize(self.cur_pil_img, self.width, self.height) )
             self.cur_step = step
             self.cur_step_string_var.set("%i"%step)
@@ -131,6 +167,7 @@ class ADScrollerWidget(tk.Frame):
             else:
                 self.canvas.itemconfig(self.canvas_image, image=self.cur_img)
             self.master.master.update_idletasks()
+            self.config(bd=0)
 
     def create_widgets(self):
         self.canvas = tk.Canvas(self, width=self.width,height=self.height)
@@ -166,7 +203,6 @@ class Application(tk.Frame):
         self.master.rowconfigure(0, weight=1)
 
     def tree_item_clicked(self, event):
-        #TODO: check if it's an image...
         if 'image' in self.bptree.item(self.bptree.focus())['tags']:
             image_name = self.bptree.item(self.bptree.focus())['text']
             self.adscroller.set_var(image_name)
