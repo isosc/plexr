@@ -68,10 +68,12 @@ def read_image (ad_file, var_name, step=0):
         #Can improve this later by capturing these once rather than at every read
         for ad_step in ad_file:
             ad_vars = ad_step.available_variables()
+            #print (ad_vars)
             shape = [int(ad_vars['%s/__plxr_data'%var_name]['Shape'])]
             shapes.append (shape)
 
-        print(shapes[step])
+        #print(shapes)
+        #print(shapes[step])
         img_data = ad_file.read("%s/__plxr_data"%var_name, start=[0], count=shapes[step], step_start=step, step_count=1)[0] #Returns a list of one step
         buf = io.BytesIO(img_data)
         return Image.open(buf)

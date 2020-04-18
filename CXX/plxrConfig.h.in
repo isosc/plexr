@@ -1,0 +1,3 @@
+// the configured options and settings for Tutorial
+#define plxr_VERSION_MAJOR @plxr_VERSION_MAJOR@
+#define plxr_VERSION_MINOR @plxr_VERSION_MINOR@

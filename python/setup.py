@@ -13,7 +13,7 @@ setup(name='plxr',
       long_description=long_description,
       long_description_content_type="text/markdown",
       packages=['plxr'],
-      install_requires=['pillow'],
+      install_requires=['pillow','matplotlib'],
       scripts=['scripts/bpix.py','scripts/bpview','scripts/bpmerge'],
       classifiers=[
         "Programming Language :: Python :: 3",
