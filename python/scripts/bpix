@@ -24,9 +24,6 @@ def main():
     # Single process viewer
     comm = MPI.COMM_SELF
 
-    print (sys.argv)
-
-
     if len(sys.argv) < 3:
         print (usage_msg)
         exit(0)
@@ -37,30 +34,9 @@ def main():
 
     #Open the bpfile
     with adios2.open(bpfilename, "r", comm) as fh:
-#        for fh_step in fh:
-#            step = fh_step.currentstep()
-#
-#            schema = str(fh_step.read("%s/__plxr_schema_type"%varname),encoding='ascii')
-#
-#            print ("Detected schema type: %s"%schema)
-#
-#            if schema == "__plxr:image-rgb-8":
-#                #Read the image data
-#                img = fh_step.read("%s/data"%varname) 
-#            pimg = Image.fromarray(img)
-
-        print (varname)
         pimg = plxr.read_image (fh, varname, step)
         pimg.save("%s_%i.png"%(varname, step) )
         step = step + 1
-
-#            else:
-#                print ("Unknown schema type detected")
-#                continue
-
-
-
-
 
 
 

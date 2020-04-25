@@ -14,7 +14,7 @@ setup(name='plxr',
       long_description_content_type="text/markdown",
       packages=['plxr'],
       install_requires=['pillow','matplotlib'],
-      scripts=['scripts/bpix.py','scripts/bpview','scripts/bpmerge'],
+      scripts=['scripts/bpix','scripts/bpview','scripts/bpmerge'],
       classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",
