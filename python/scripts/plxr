@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+
+
+import argparse
+import sys
+
+from mpi4py import MPI
+import numpy as np
+import adios2
+import plxr
+
+from PIL import Image
+
+## viewer.py
+usage_msg = """Usage: plxr <operation> <op_args>
+
+Where <operation> is one of the following:
+    extract
+    insert
+    list
+"""
+
+def commandline (argv):
+    parser = argparse.ArgumentParser(prog='plxr')
+    subparsers = parser.add_subparsers(help='sub help', dest="subcommand")
+
+    _parser_template = subparsers.add_parser('list', help="List images in a bp file")
+    _parser_template.add_argument('bpfile')
+
+    _parser_template = subparsers.add_parser('insert', help="Add image to a bp file. Create bp file if necessary.")
+    _parser_template.add_argument('bpfile')
+    _parser_template.add_argument('image_file')
+    _parser_template.add_argument('image_name')
+
+    _parser_template = subparsers.add_parser('extract', help="Extract image from a bp file.")
+    _parser_template.add_argument('bpfile')
+    _parser_template.add_argument('image_file')
+    _parser_template.add_argument('image_name')
+
+
+    return (parser.parse_args(argv[1:])) # Skip the program name, and pass the rest to the parser
+
+
+
+def main():
+
+    config = commandline(sys.argv)
+
+    if config.subcommand == "list":
+        do_list (config)
+    elif config.subcommand == "extract":
+        do_extract(config)
+    elif config.subcommand == "insert":
+        do_insert(config)
+    else:
+        print ("unknown command, exiting")
+
+def do_list(config):
+    print("List...")
+
+def do_insert(config):
+    print ("Insert...")
+
+def do_extract(config):
+    print ("Extract...")
+    step = 0
+
+    # Single process viewer
+    comm = MPI.COMM_SELF
+
+    if len(sys.argv) < 3:
+        print (usage_msg)
+        exit(0)
+
+    bpfilename = sys.argv[1]
+    varname = sys.argv[2]
+
+
+    #Open the bpfile
+    with adios2.open(bpfilename, "r", comm) as fh:
+        pimg = plxr.read_image (fh, varname, step)
+        pimg.save("%s_%i.png"%(varname, step) )
+        step = step + 1
+
+
+
+if __name__ == "__main__":
+    main()
