@@ -90,7 +90,7 @@ def get_image_names (ad_file):
     for ad_var in ad_vars.keys():
         # "Value" no longer provided for strings, use read_string instead...
         #if ad_var.split('/')[-1].startswith('__plxr_schema_type') and 'image' in ad_vars[ad_var]['Value']:
-        if ad_var.split('/')[-1].startswith('__plxr_schema_type') and 'image' in ad_file.read_string(ad_var)[0]:
+        if ad_var.split('/')[-1].startswith('__plxr_schema_type') and 'image' in ad_file.read_string(ad_var, step_start=0, step_count=1)[0]:
             rv.append(ad_var[0:ad_var.rfind('/')])
     return rv
 

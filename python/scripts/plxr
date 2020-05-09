@@ -34,17 +34,17 @@ def commandline (argv):
 
     _parser_template = subparsers.add_parser('extract', help="Extract image from a bp file.")
     _parser_template.add_argument('bpfile')
-    _parser_template.add_argument('image_file')
     _parser_template.add_argument('image_name')
+    _parser_template.add_argument('--filename', required=False)
 
 
     return (parser.parse_args(argv[1:])) # Skip the program name, and pass the rest to the parser
 
 
 
-def main():
+def main(argv):
 
-    config = commandline(sys.argv)
+    config = commandline(argv)
 
     if config.subcommand == "list":
         do_list (config)
@@ -56,33 +56,38 @@ def main():
         print ("unknown command, exiting")
 
 def do_list(config):
-    print("List...")
+
+    comm = MPI.COMM_SELF
+    with adios2.open(config.bpfile, "r", comm) as fh:
+        # Query available images
+        names = plxr.get_image_names (fh)
+        for name in names:
+            print (name)
+
 
 def do_insert(config):
-    print ("Insert...")
+
+    comm = MPI.COMM_SELF
+    # Need some logic for checking file exists
+    with adios2.open(config.bpfile, "a", comm) as fh:
+        # Load image
+        img = Image.open (config.image_file).convert("RGB")
+        plxr.write_png_image (fh, img, config.image_name)
+
+
 
 def do_extract(config):
-    print ("Extract...")
     step = 0
-
-    # Single process viewer
     comm = MPI.COMM_SELF
 
-    if len(sys.argv) < 3:
-        print (usage_msg)
-        exit(0)
-
-    bpfilename = sys.argv[1]
-    varname = sys.argv[2]
-
-
     #Open the bpfile
-    with adios2.open(bpfilename, "r", comm) as fh:
-        pimg = plxr.read_image (fh, varname, step)
-        pimg.save("%s_%i.png"%(varname, step) )
+    with adios2.open(config.bpfile, "r", comm) as fh:
+        pimg = plxr.read_image (fh, config.image_name, step)
+        image_prefix = config.filename if config.filename else config.image_name
+        pimg.save("%s_%i.png"%(image_prefix, step) )
         step = step + 1
 
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv)
