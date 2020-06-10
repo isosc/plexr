@@ -103,3 +103,30 @@ def get_raw_var_names_hl (ad_file):
             rv.append(ad_var)
     return rv
 
+
+
+def write_image_ll (io, engine, image, var_name):
+    pass
+
+def write_png_image_ll (io, engine, image, var_name):
+    pass
+
+def write_image_from_matplotlib_ll (io, engine, fig, var_name):
+    pass
+
+def write_png_image_from_matplotlib_ll (io, engine, fig, var_name):
+    pass
+
+def get_available_image_steps_ll (io, engine, var_name):
+    pass
+
+def read_image_ll (io, engine, var_name, step=0):
+    pass
+
+def get_image_names_ll (io, engine):
+    pass
+
+def get_raw_var_names_ll (io, engine):
+    pass
+
+
