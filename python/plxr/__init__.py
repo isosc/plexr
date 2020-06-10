@@ -6,7 +6,7 @@ from ast import literal_eval as make_tuple
 
 
 #Given a writable opened adios file (returned by adios2.open), image data of the form used by PIL (or corresponding numpy array), and variable name, write the image to the adios file.
-def write_image (ad_file, image, var_name):
+def write_image_hl (ad_file, image, var_name):
     image = np.array(image)
     if not image.shape[2] == 3:
         raise TypeError("Expecting RGB Data, size of third dimension must be 3") #todo: deal with other formats
@@ -15,7 +15,7 @@ def write_image (ad_file, image, var_name):
     ad_file.write("%s/__plxr_data"%var_name, image, image.shape, (0,0,0), image.shape, end_step=True)
 
 
-def write_png_image (ad_file, image, var_name):
+def write_png_image_hl (ad_file, image, var_name):
     image = np.array(image)
     if not image.shape[2] == 3:
         raise TypeError("Expecting RGB Data, size of third dimension must be 3") #todo: deal with other formats
@@ -32,24 +32,24 @@ def write_png_image (ad_file, image, var_name):
     ad_file.write("%s/__plxr_schema_type"%var_name, "__plxr:image-png")
     ad_file.write("%s/__plxr_data"%var_name, contents, contents.shape, (0,), contents.shape, end_step=True)
 
-def write_image_from_matplotlib (ad_file, fig, var_name):
+def write_image_from_matplotlib_hl (ad_file, fig, var_name):
     fig.canvas.draw()
     img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
     img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
     write_image(ad_file, img, var_name)
 
-def write_png_image_from_matplotlib (ad_file, fig, var_name):
+def write_png_image_from_matplotlib_hl (ad_file, fig, var_name):
     fig.canvas.draw()
     img = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
     img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-    write_png_image(ad_file, img, var_name)
+    write_png_image_hl(ad_file, img, var_name)
 
 
-def get_available_image_steps (ad_file, var_name):
+def get_available_image_steps_hl (ad_file, var_name):
     ad_vars = ad_file.available_variables()
     return int(ad_vars['%s/__plxr_data'%var_name]['AvailableStepsCount'])
 
-def read_image (ad_file, var_name, step=0):
+def read_image_hl (ad_file, var_name, step=0):
 
     #Check image type
     ad_vars = ad_file.available_variables()
@@ -84,7 +84,7 @@ def read_image (ad_file, var_name, step=0):
         print ("__plxr:image-png")
         return None
 
-def get_image_names (ad_file):
+def get_image_names_hl (ad_file):
     rv = []
     ad_vars = ad_file.available_variables()
     for ad_var in ad_vars.keys():
@@ -95,7 +95,7 @@ def get_image_names (ad_file):
     return rv
 
 
-def get_raw_var_names (ad_file):
+def get_raw_var_names_hl (ad_file):
     rv = []
     ad_vars = ad_file.available_variables()
     for ad_var in ad_vars.keys():

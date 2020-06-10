@@ -60,7 +60,7 @@ def do_list(config):
     comm = MPI.COMM_SELF
     with adios2.open(config.bpfile, "r", comm) as fh:
         # Query available images
-        names = plxr.get_image_names (fh)
+        names = plxr.get_image_names_hl (fh)
         for name in names:
             print (name)
 
@@ -72,7 +72,7 @@ def do_insert(config):
     with adios2.open(config.bpfile, "a", comm) as fh:
         # Load image
         img = Image.open (config.image_file).convert("RGB")
-        plxr.write_png_image (fh, img, config.image_name)
+        plxr.write_png_image_hl (fh, img, config.image_name)
 
 
 
@@ -82,7 +82,7 @@ def do_extract(config):
 
     #Open the bpfile
     with adios2.open(config.bpfile, "r", comm) as fh:
-        pimg = plxr.read_image (fh, config.image_name, step)
+        pimg = plxr.read_image_hl (fh, config.image_name, step)
         image_prefix = config.filename if config.filename else config.image_name
         pimg.save("%s_%i.png"%(image_prefix, step) )
         step = step + 1

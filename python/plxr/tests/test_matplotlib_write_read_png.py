@@ -34,12 +34,11 @@ class TestWriteReadPng(TestCase):
 
         # test writing
         with adios2.open("test_mpl.bp", "w") as fh:
-            plxr.write_png_image_from_matplotlib (fh, fig, 'test_image')
-#            plxr.write_png_image (fh, img, 'test_image')
+            plxr.write_png_image_from_matplotlib_hl (fh, fig, 'test_image')
 
         # test reading
         with adios2.open("test_mpl.bp", "r") as fh:
-            rimg = plxr.read_image (fh, 'test_image', 0)
+            rimg = plxr.read_image_hl (fh, 'test_image', 0)
             readPixels = list(rimg.getdata())
 
             # Compare pixels to original
@@ -60,24 +59,24 @@ class TestWriteReadPng(TestCase):
 
         # test writing
         with adios2.open("test_mpl_multiple.bp", "w") as fh:
-            plxr.write_png_image (fh, img1, 'test_image')
-            plxr.write_png_image (fh, img2, 'test_image')
-            plxr.write_png_image (fh, img3, 'test_image')
-            plxr.write_png_image (fh, img4, 'test_image')
+            plxr.write_png_image_hl (fh, img1, 'test_image')
+            plxr.write_png_image_hl (fh, img2, 'test_image')
+            plxr.write_png_image_hl (fh, img3, 'test_image')
+            plxr.write_png_image_hl (fh, img4, 'test_image')
 
 
         # test reading
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg1 = plxr.read_image (fh, 'test_image', 0)
+            rimg1 = plxr.read_image_hl (fh, 'test_image', 0)
             readPixels1 = list(rimg1.getdata())
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg2 = plxr.read_image (fh, 'test_image', 1)
+            rimg2 = plxr.read_image_hl (fh, 'test_image', 1)
             readPixels2 = list(rimg2.getdata())
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg3 = plxr.read_image (fh, 'test_image', 2)
+            rimg3 = plxr.read_image_hl (fh, 'test_image', 2)
             readPixels3 = list(rimg3.getdata())
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg4 = plxr.read_image (fh, 'test_image', 3)
+            rimg4 = plxr.read_image_hl (fh, 'test_image', 3)
             readPixels4 = list(rimg4.getdata())
 
             # Compare pixels to original
@@ -101,27 +100,27 @@ class TestWriteReadPng(TestCase):
 
         # test writing using separate opens
         with adios2.open("test_mpl_multiple.bp", "w") as fh:
-            plxr.write_png_image (fh, img1, 'test_image')
+            plxr.write_png_image_hl (fh, img1, 'test_image')
         with adios2.open("test_mpl_multiple.bp", "a") as fh:
-            plxr.write_png_image (fh, img2, 'test_image')
+            plxr.write_png_image_hl (fh, img2, 'test_image')
         with adios2.open("test_mpl_multiple.bp", "a") as fh:
-            plxr.write_png_image (fh, img3, 'test_image')
+            plxr.write_png_image_hl (fh, img3, 'test_image')
         with adios2.open("test_mpl_multiple.bp", "a") as fh:
-            plxr.write_png_image (fh, img4, 'test_image')
+            plxr.write_png_image_hl (fh, img4, 'test_image')
 
 
         # test reading
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg1 = plxr.read_image (fh, 'test_image', 0)
+            rimg1 = plxr.read_image_hl (fh, 'test_image', 0)
             readPixels1 = list(rimg1.getdata())
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg2 = plxr.read_image (fh, 'test_image', 1)
+            rimg2 = plxr.read_image_hl (fh, 'test_image', 1)
             readPixels2 = list(rimg2.getdata())
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg3 = plxr.read_image (fh, 'test_image', 2)
+            rimg3 = plxr.read_image_hl (fh, 'test_image', 2)
             readPixels3 = list(rimg3.getdata())
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg4 = plxr.read_image (fh, 'test_image', 3)
+            rimg4 = plxr.read_image_hl (fh, 'test_image', 3)
             readPixels4 = list(rimg4.getdata())
 
             # Compare pixels to original
