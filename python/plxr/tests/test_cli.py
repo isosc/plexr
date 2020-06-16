@@ -16,16 +16,16 @@ class TestPlxrCLI(TestCase):
         self.assertEqual (exit_status, 0)
 
     def test_plxr_insert_multiple(self):
-        cp = subprocess.run(['plxr','insert', 'test_plxr_cli.bp', "{}/images/simple-3x3-1.png".format(os.path.dirname(os.path.abspath(__file__))), 'A'])
+        cp = subprocess.run(['plxr','insert', 'test_plxr_cli_multi.bp', "{}/images/simple-3x3-1.png".format(os.path.dirname(os.path.abspath(__file__))), 'A'])
         exit_status = cp.returncode
         self.assertEqual (exit_status, 0)
-        cp = subprocess.run(['plxr','insert', 'test_plxr_cli.bp', "{}/images/simple-3x3-2.png".format(os.path.dirname(os.path.abspath(__file__))), 'B'])
+        cp = subprocess.run(['plxr','insert', 'test_plxr_cli_multi.bp', "{}/images/simple-3x3-2.png".format(os.path.dirname(os.path.abspath(__file__))), 'B'])
         exit_status = cp.returncode
         self.assertEqual (exit_status, 0)
-        cp = subprocess.run(['plxr','insert', 'test_plxr_cli.bp', "{}/images/simple-3x3-3.png".format(os.path.dirname(os.path.abspath(__file__))), 'C'])
+        cp = subprocess.run(['plxr','insert', 'test_plxr_cli_multi.bp', "{}/images/simple-3x3-3.png".format(os.path.dirname(os.path.abspath(__file__))), 'C'])
         exit_status = cp.returncode
         self.assertEqual (exit_status, 0)
-        cp = subprocess.run(['plxr','insert', 'test_plxr_cli.bp', "{}/images/simple-3x3-4.png".format(os.path.dirname(os.path.abspath(__file__))), 'D'])
+        cp = subprocess.run(['plxr','insert', 'test_plxr_cli_multi.bp', "{}/images/simple-3x3-4.png".format(os.path.dirname(os.path.abspath(__file__))), 'D'])
         exit_status = cp.returncode
         self.assertEqual (exit_status, 0)
 

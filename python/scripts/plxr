@@ -2,6 +2,7 @@
 
 
 import argparse
+import os
 import sys
 
 from mpi4py import MPI
@@ -68,24 +69,28 @@ def do_list(config):
 def do_insert(config):
 
     comm = MPI.COMM_SELF
-    # Need some logic for checking file exists
-    with adios2.open(config.bpfile, "a", comm) as fh:
+    if os.path.isfile(config.bpfile):
+        mode_char = 'a'
+    else:
+        mode_char = 'w'
+    with adios2.open(config.bpfile, mode_char, comm) as fh:
         # Load image
         img = Image.open (config.image_file).convert("RGB")
-        plxr.write_png_image_hl (fh, img, config.image_name)
+        plxr.write_png_image_hl (fh, img, config.image_name, end_step=True)
 
 
-
+# Assumes all steps have this image, need to revisit if not true...
 def do_extract(config):
     step = 0
     comm = MPI.COMM_SELF
 
     #Open the bpfile
     with adios2.open(config.bpfile, "r", comm) as fh:
-        pimg = plxr.read_image_hl (fh, config.image_name, step)
-        image_prefix = config.filename if config.filename else config.image_name
-        pimg.save("%s_%i.png"%(image_prefix, step) )
-        step = step + 1
+        for ad_step in fh:
+            pimg = plxr.read_image_hl (ad_step, config.image_name)
+            image_prefix = config.filename if config.filename else config.image_name
+            pimg.save("%s_%i.png"%(image_prefix, step) )
+            step = step + 1
 
 
 

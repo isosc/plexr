@@ -38,11 +38,13 @@ class TestWriteReadPng(TestCase):
 
         # test reading
         with adios2.open("test_mpl.bp", "r") as fh:
-            rimg = plxr.read_image_hl (fh, 'test_image', 0)
-            readPixels = list(rimg.getdata())
+            for ad_step in fh:
+                rimg = plxr.read_image_hl (fh, 'test_image')
+                readPixels = list(rimg.getdata())
 
-            # Compare pixels to original
-#            self.assertEqual (pngPixels, readPixels)
+                # Compare pixels to original
+                # Skip this for now, need to extract pixels from original mpl figure...
+#                self.assertEqual (pngPixels, readPixels)
 
     def test_multiple_steps(self):
 
@@ -59,31 +61,27 @@ class TestWriteReadPng(TestCase):
 
         # test writing
         with adios2.open("test_mpl_multiple.bp", "w") as fh:
-            plxr.write_png_image_hl (fh, img1, 'test_image')
-            plxr.write_png_image_hl (fh, img2, 'test_image')
-            plxr.write_png_image_hl (fh, img3, 'test_image')
-            plxr.write_png_image_hl (fh, img4, 'test_image')
+            plxr.write_png_image_hl (fh, img1, 'test_image', end_step=True)
+            plxr.write_png_image_hl (fh, img2, 'test_image', end_step=True)
+            plxr.write_png_image_hl (fh, img3, 'test_image', end_step=True)
+            plxr.write_png_image_hl (fh, img4, 'test_image', end_step=True)
 
 
         # test reading
+        rimgs = []
+        readPixels = []
+        i = 0
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg1 = plxr.read_image_hl (fh, 'test_image', 0)
-            readPixels1 = list(rimg1.getdata())
-        with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg2 = plxr.read_image_hl (fh, 'test_image', 1)
-            readPixels2 = list(rimg2.getdata())
-        with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg3 = plxr.read_image_hl (fh, 'test_image', 2)
-            readPixels3 = list(rimg3.getdata())
-        with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg4 = plxr.read_image_hl (fh, 'test_image', 3)
-            readPixels4 = list(rimg4.getdata())
+            for ad_step in fh:
+              rimgs.append(plxr.read_image_hl (ad_step, 'test_image') )
+              readPixels.append(list(rimgs[i].getdata()) )
+              i = i + 1
 
             # Compare pixels to original
-            self.assertEqual (pngPixels1, readPixels1)
-            self.assertEqual (pngPixels2, readPixels2)
-            self.assertEqual (pngPixels3, readPixels3)
-            self.assertEqual (pngPixels4, readPixels4)
+            self.assertEqual (pngPixels1, readPixels[0])
+            self.assertEqual (pngPixels2, readPixels[1])
+            self.assertEqual (pngPixels3, readPixels[2])
+            self.assertEqual (pngPixels4, readPixels[3])
 
     def test_multiple_steps_with_append(self):
 
@@ -110,23 +108,16 @@ class TestWriteReadPng(TestCase):
 
 
         # test reading
+        readPixels = []
         with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg1 = plxr.read_image_hl (fh, 'test_image', 0)
-            readPixels1 = list(rimg1.getdata())
-        with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg2 = plxr.read_image_hl (fh, 'test_image', 1)
-            readPixels2 = list(rimg2.getdata())
-        with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg3 = plxr.read_image_hl (fh, 'test_image', 2)
-            readPixels3 = list(rimg3.getdata())
-        with adios2.open("test_mpl_multiple.bp", "r") as fh:
-            rimg4 = plxr.read_image_hl (fh, 'test_image', 3)
-            readPixels4 = list(rimg4.getdata())
+            for ad_step in fh:
+                rimg = plxr.read_image_hl (ad_step, 'test_image')
+                readPixels.append(list(rimg.getdata()) )
 
             # Compare pixels to original
-            self.assertEqual (pngPixels1, readPixels1)
-            self.assertEqual (pngPixels2, readPixels2)
-            self.assertEqual (pngPixels3, readPixels3)
-            self.assertEqual (pngPixels4, readPixels4)
+            self.assertEqual (pngPixels1, readPixels[0])
+            self.assertEqual (pngPixels2, readPixels[1])
+            self.assertEqual (pngPixels3, readPixels[2])
+            self.assertEqual (pngPixels4, readPixels[3])
 
 
