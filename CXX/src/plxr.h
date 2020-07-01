@@ -1,11 +1,9 @@
-
+#include "adios2.h"
 
 class plxr
 {
 
 public:
-	void WriteImage();
-
-
+	static void WriteImage();
 
 };

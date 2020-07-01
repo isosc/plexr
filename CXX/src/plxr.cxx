@@ -4,5 +4,5 @@
 
 void plxr::WriteImage()
 {
-	std::cout << "You called it" << std::endl;
+	std::cout << "Hello plxr" << std::endl;
 }
